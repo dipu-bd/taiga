@@ -260,6 +260,7 @@ BOOL SettingsPage::OnInitDialog() {
       list.InsertItem(i++, 0, ui::kIcon16_AppBlue, 0, nullptr, L"Viz Anime", taiga::kStream_Viz);
       list.InsertItem(i++, 0, ui::kIcon16_AppBlue, 0, nullptr, L"Wakanim", taiga::kStream_Wakanim);
       list.InsertItem(i++, 0, ui::kIcon16_AppBlue, 0, nullptr, L"YouTube", taiga::kStream_Youtube);
+	  list.InsertItem(i++, 0, ui::kIcon16_AppBlue, 0, nullptr, L"KissAnime", taiga::kStream_KissAnime);
       for (int i = 0; i < list.GetItemCount(); ++i) {
         if (Settings.GetBool(static_cast<int>(list.GetItemParam(i))))
           list.SetCheckState(i, TRUE);
@@ -899,7 +900,8 @@ LRESULT SettingsPage::OnNotify(int idCtrl, LPNMHDR pnmh) {
           L"http://www.veoh.com",
           L"http://www.viz.com/anime/streaming",
           L"http://www.wakanim.tv",
-          L"http://www.youtube.com",
+		  L"http://www.youtube.com",
+		  L"http://kissanime.com/Anime",
         };
         if (lpnmitem->iItem > -1 && lpnmitem->iItem < static_cast<int>(links.size()))
           ExecuteLink(links.at(lpnmitem->iItem));
