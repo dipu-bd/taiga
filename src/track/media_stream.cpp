@@ -427,7 +427,7 @@ bool MatchStreamUrl(StreamingVideoProvider stream_provider,
 	case kStreamYoutube:
 		return InStr(url, L"youtube.com/watch") > -1;
 	case kStreamKissAnime:
-		return SearchRegex(url, L"kissanime.com/Anime/[^/]+/.*");
+		return SearchRegex(url, L"kissanime\\.[a-z.]+/Anime/[^/]+/.*");
 	}
 
 	return false;
