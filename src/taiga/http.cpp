@@ -22,6 +22,7 @@
 #include "base/string.h"
 #include "base/url.h"
 #include "library/anime_util.h"
+#include "library/discover.h"
 #include "library/resource.h"
 #include "sync/manager.h"
 #include "taiga/announce.h"
@@ -221,6 +222,21 @@ void HttpManager::HandleResponse(HttpResponse& response) {
       break;
     }
 
+    case kHttpSeasonsGet: {
+      auto filename = GetFileName(client.request().url.path);
+      auto path = GetPath(kPathDatabaseSeason) + filename;
+      if (SaveToFile(client.write_buffer_, path) &&
+          SeasonDatabase.LoadFile(filename)) {
+        Settings.Set(taiga::kApp_Seasons_LastSeason,
+                     SeasonDatabase.current_season.GetString());
+        SeasonDatabase.Review();
+        ui::OnSeasonLoad(SeasonDatabase.IsRefreshRequired());
+      } else {
+        ui::OnSeasonLoadFail();
+      }
+      break;
+    }
+
     case kHttpTwitterRequest:
     case kHttpTwitterAuth:
     case kHttpTwitterPost:
@@ -232,10 +248,7 @@ void HttpManager::HandleResponse(HttpResponse& response) {
         if (Taiga.Updater.IsDownloadAllowed())
           break;
       ui::OnUpdateFinished();
-      auto it = client.request().url.query.find(L"check");
-      if (it != client.request().url.query.end())
-        if (it->second == L"manual")
-          Taiga.Updater.CheckAnimeRelations();
+      Taiga.Updater.CheckAnimeRelations();
       break;
     }
     case kHttpTaigaUpdateDownload:

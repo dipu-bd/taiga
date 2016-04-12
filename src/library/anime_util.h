@@ -22,7 +22,6 @@
 #include <string>
 #include <vector>
 
-#include "base/comparable.h"
 #include "library/anime_episode.h"
 
 class Date;
@@ -30,6 +29,7 @@ class Date;
 namespace anime {
 
 class Item;
+class Season;
 
 bool IsValidId(int anime_id);
 
@@ -70,7 +70,8 @@ bool ValidateFolder(Item& item);
 int GetEpisodeHigh(const Episode& episode);
 int GetEpisodeLow(const Episode& episode);
 std::wstring GetEpisodeRange(const Episode& episode);
-std::wstring GetEpisodeRange(const episode_number_range_t& range);
+std::wstring GetVolumeRange(const Episode& episode);
+std::wstring GetEpisodeRange(const number_range_t& range);
 bool IsAllEpisodesAvailable(const Item& item);
 bool IsEpisodeRange(const Episode& episode);
 bool IsValidEpisodeCount(int number);
@@ -84,6 +85,7 @@ void DecrementEpisode(int anime_id);
 void IncrementEpisode(int anime_id);
 
 void GetAllTitles(int anime_id, std::vector<std::wstring>& titles);
+int GetMyRewatchedTimes(const Item& item);
 void GetProgressRatios(const Item& item, float& ratio_aired, float& ratio_watched);
 
 std::wstring TranslateMyStatus(int value, bool add_count);
@@ -99,34 +101,10 @@ int TranslateResolution(const std::wstring& str, bool return_validity = false);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class Season : public base::Comparable<Season> {
-public:
-  Season();
-  ~Season() {}
-
-  Season& operator = (const Season& season);
-
-  enum Name {
-    kUnknown,
-    kWinter,
-    kSpring,
-    kSummer,
-    kFall
-  };
-
-  Name name;
-  unsigned short year;
-
-private:
-  base::CompareResult Compare(const Season& season) const;
-};
-
 bool IsValidDate(const Date& date);
-void GetSeasonInterval(const std::wstring& season, Date& date_start, Date& date_end);
 std::wstring TranslateDate(const Date& date);
-Season TranslateDateToSeason(const Date& date);
 std::wstring TranslateDateToSeasonString(const Date& date);
-std::wstring TranslateSeasonToMonths(const std::wstring& season);
+std::wstring TranslateSeasonToMonths(const Season& season);
 
 }  // namespace anime
 

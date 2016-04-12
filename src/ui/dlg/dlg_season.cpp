@@ -37,31 +37,10 @@
 
 namespace ui {
 
-enum SeasonGroupBy {
-  kSeasonGroupByAiringStatus,
-  kSeasonGroupByListStatus,
-  kSeasonGroupByType
-};
-
-enum SeasonSortBy {
-  kSeasonSortByAiringDate,
-  kSeasonSortByEpisodes,
-  kSeasonSortByPopularity,
-  kSeasonSortByScore,
-  kSeasonSortByTitle
-};
-
-enum SeasonViewAs {
-  kSeasonViewAsImages,
-  kSeasonViewAsTiles
-};
-
 SeasonDialog DlgSeason;
 
 SeasonDialog::SeasonDialog()
-    : group_by(kSeasonGroupByType),
-      sort_by(kSeasonSortByTitle),
-      view_as(kSeasonViewAsTiles) {
+    : hot_item_(-1) {
 }
 
 BOOL SeasonDialog::OnInitDialog() {
@@ -71,7 +50,13 @@ BOOL SeasonDialog::OnInitDialog() {
   list_.SetExtendedStyle(LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT);
   list_.SetTheme();
   list_.SetView(LV_VIEW_TILE);
-  SetViewMode(kSeasonViewAsTiles);
+  SetViewMode(Settings.GetInt(taiga::kApp_Seasons_ViewAs));
+
+  // Create list tooltips
+  tooltips_.Create(list_.GetWindowHandle());
+  tooltips_.SetDelayTime(30000, -1, 0);
+  tooltips_.SetMaxWidth(::GetSystemMetrics(SM_CXSCREEN));  // Required for line breaks
+  tooltips_.AddTip(0, nullptr, nullptr, nullptr, false);
 
   // Create main toolbar
   toolbar_.Attach(GetDlgItem(IDC_TOOLBAR_SEASON));
@@ -97,6 +82,16 @@ BOOL SeasonDialog::OnInitDialog() {
   rebar_.InsertBand(nullptr, 0, 0, 0, 0, 0, 0, 0, 0, fMask, fStyle);
   rebar_.InsertBand(toolbar_.GetWindowHandle(), GetSystemMetrics(SM_CXSCREEN), 0, 0, 0, 0, 0, 0,
                     HIWORD(toolbar_.GetButtonSize()) + (HIWORD(toolbar_.GetPadding()) / 2), fMask, fStyle);
+
+  // Load the last selected season
+  const auto last_season = Settings[taiga::kApp_Seasons_LastSeason];
+  if (!last_season.empty()) {
+    if (SeasonDatabase.LoadSeason(last_season)) {
+      SeasonDatabase.Review();
+    } else {
+      Settings.Set(taiga::kApp_Seasons_LastSeason, std::wstring());
+    }
+  }
 
   // Refresh
   RefreshList();
@@ -191,6 +186,54 @@ void SeasonDialog::OnSize(UINT uMsg, UINT nType, SIZE size) {
 LRESULT SeasonDialog::OnListNotify(LPARAM lParam) {
   LPNMHDR pnmh = reinterpret_cast<LPNMHDR>(lParam);
   switch (pnmh->code) {
+    // Key press
+    case LVN_KEYDOWN: {
+      auto pnkd = reinterpret_cast<LPNMLVKEYDOWN>(pnmh);
+      switch (pnkd->wVKey) {
+        case VK_RETURN: {
+          int anime_id = GetAnimeIdFromSelectedListItem(list_);
+          if (anime::IsValidId(anime_id)) {
+            ShowDlgAnimeInfo(anime_id);
+            return TRUE;
+          }
+          break;
+        }
+      }
+      break;
+    }
+                            
+    // Item hover
+    case LVN_HOTTRACK: {
+      auto lplv = reinterpret_cast<LPNMLISTVIEW>(lParam);
+      if (Settings.GetInt(taiga::kApp_Seasons_ViewAs) != kSeasonViewAsImages) {
+        tooltips_.NewToolRect(0, nullptr);
+        break;
+      }
+      if (hot_item_ != lplv->iItem) {
+        hot_item_ = lplv->iItem;
+        win::Rect rect_item;
+        list_.GetSubItemRect(lplv->iItem, 0, &rect_item);
+        tooltips_.NewToolRect(0, &rect_item);
+      }
+      auto anime_item = AnimeDatabase.FindItem(list_.GetItemParam(lplv->iItem));
+      if (anime_item) {
+        tooltips_.UpdateTitle(anime_item->GetTitle().c_str());
+        std::wstring text;
+        const std::wstring separator = L" \u2022 ";
+        text += anime::TranslateType(anime_item->GetType()) + separator +
+                anime::TranslateNumber(anime_item->GetEpisodeCount(), L"?") + L" eps." + separator +
+                anime::TranslateScore(anime_item->GetScore());
+        if (taiga::GetCurrentServiceId() == sync::kMyAnimeList)
+          text += separator + L"#" + ToWstr(anime_item->GetPopularity());
+        if (!anime_item->GetGenres().empty())
+          text += L"\n" + Join(anime_item->GetGenres(), L", ");
+        if (!anime_item->GetProducers().empty())
+          text += L"\n" + Join(anime_item->GetProducers(), L", ");
+        tooltips_.UpdateText(0, text.c_str());
+      }
+      break;
+    }
+
     // Custom draw
     case NM_CUSTOMDRAW: {
       return OnListCustomDraw(lParam);
@@ -326,6 +369,9 @@ LRESULT SeasonDialog::OnListCustomDraw(LPARAM lParam) {
           color = ui::kColorLightRed;
           break;
       }
+
+      auto view_as = Settings.GetInt(taiga::kApp_Seasons_ViewAs);
+      
       if (view_as == kSeasonViewAsImages) {
         rect_title.Copy(rect);
         rect_title.top = rect_title.bottom - (text_height + 8);
@@ -344,7 +390,7 @@ LRESULT SeasonDialog::OnListCustomDraw(LPARAM lParam) {
       // Set title
       std::wstring text = anime_item->GetTitle();
       if (view_as == kSeasonViewAsImages) {
-        switch (sort_by) {
+        switch (Settings.GetInt(taiga::kApp_Seasons_SortBy)) {
           case kSeasonSortByAiringDate:
             text = anime::TranslateDate(anime_item->GetDateStart());
             break;
@@ -482,6 +528,11 @@ LRESULT SeasonDialog::OnToolbarNotify(LPARAM lParam) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void SeasonDialog::EnableInput(bool enable) {
+  toolbar_.Enable(enable);
+  list_.Enable(enable);
+}
+
 void SeasonDialog::RefreshData(int anime_id) {
   ui::SetSharedCursor(IDC_WAIT);
 
@@ -523,9 +574,9 @@ void SeasonDialog::RefreshList(bool redraw_only) {
   // Insert list groups
   list_.RemoveAllGroups();
   list_.EnableGroupView(true);  // Required for XP
-  switch (group_by) {
+  switch (Settings.GetInt(taiga::kApp_Seasons_GroupBy)) {
     case kSeasonGroupByAiringStatus:
-      for (int i = anime::kAiring; i <= anime::kNotYetAired; i++) {
+      for (int i = anime::kFinishedAiring; i <= anime::kNotYetAired; i++) {
         list_.InsertGroup(i, anime::TranslateStatus(i).c_str(), true, false);
       }
       break;
@@ -535,6 +586,7 @@ void SeasonDialog::RefreshList(bool redraw_only) {
       }
       break;
     case kSeasonGroupByType:
+    default:
       for (int i = anime::kTv; i <= anime::kMusic; i++) {
         list_.InsertGroup(i, anime::TranslateType(i).c_str(), true, false);
       }
@@ -566,7 +618,7 @@ void SeasonDialog::RefreshList(bool redraw_only) {
     if (!passed_filters)
       continue;
     int group = -1;
-    switch (group_by) {
+    switch (Settings.GetInt(taiga::kApp_Seasons_GroupBy)) {
       case kSeasonGroupByAiringStatus:
         group = anime_item->GetAiringStatus();
         break;
@@ -575,6 +627,7 @@ void SeasonDialog::RefreshList(bool redraw_only) {
         break;
       }
       case kSeasonGroupByType:
+      default:
         group = anime_item->GetType();
         break;
     }
@@ -584,7 +637,7 @@ void SeasonDialog::RefreshList(bool redraw_only) {
   }
 
   // Sort items
-  switch (sort_by) {
+  switch (Settings.GetInt(taiga::kApp_Seasons_SortBy)) {
     case kSeasonSortByAiringDate:
       list_.Sort(0, 1, ui::kListSortDateStart, ui::ListViewCompareProc);
       break;
@@ -598,6 +651,7 @@ void SeasonDialog::RefreshList(bool redraw_only) {
       list_.Sort(0, -1, ui::kListSortScore, ui::ListViewCompareProc);
       break;
     case kSeasonSortByTitle:
+    default:
       list_.Sort(0, 1, ui::kListSortTitle, ui::ListViewCompareProc);
       break;
   }
@@ -612,20 +666,21 @@ void SeasonDialog::RefreshStatus() {
   if (SeasonDatabase.items.empty())
     return;
 
-  std::wstring text = SeasonDatabase.name + L", from " +
-                      anime::TranslateSeasonToMonths(SeasonDatabase.name);
+  std::wstring text = SeasonDatabase.current_season.GetString() + L", from " +
+                      anime::TranslateSeasonToMonths(SeasonDatabase.current_season);
 
   ui::ChangeStatusText(text);
 }
 
 void SeasonDialog::RefreshToolbar() {
-  if (!SeasonDatabase.name.empty())
-    toolbar_.SetButtonText(0, SeasonDatabase.name.c_str());
+  toolbar_.SetButtonText(0, SeasonDatabase.current_season ?
+      SeasonDatabase.current_season.GetString().c_str() :
+      L"Select season");
 
   toolbar_.EnableButton(101, !SeasonDatabase.items.empty());
 
   std::wstring text = L"Group by: ";
-  switch (group_by) {
+  switch (Settings.GetInt(taiga::kApp_Seasons_GroupBy)) {
     case kSeasonGroupByAiringStatus:
       text += L"Airing status";
       break;
@@ -633,13 +688,14 @@ void SeasonDialog::RefreshToolbar() {
       text += L"List status";
       break;
     case kSeasonGroupByType:
+    default:
       text += L"Type";
       break;
   }
   toolbar_.SetButtonText(3, text.c_str());
 
   text = L"Sort by: ";
-  switch (sort_by) {
+  switch (Settings.GetInt(taiga::kApp_Seasons_SortBy)) {
     case kSeasonSortByAiringDate:
       text += L"Airing date";
       break;
@@ -653,17 +709,19 @@ void SeasonDialog::RefreshToolbar() {
       text += L"Score";
       break;
     case kSeasonSortByTitle:
+    default:
       text += L"Title";
       break;
   }
   toolbar_.SetButtonText(4, text.c_str());
 
   text = L"View: ";
-  switch (view_as) {
+  switch (Settings.GetInt(taiga::kApp_Seasons_ViewAs)) {
     case kSeasonViewAsImages:
       text += L"Images";
       break;
     case kSeasonViewAsTiles:
+    default:
       text += L"Details";
       break;
   }
@@ -706,7 +764,7 @@ void SeasonDialog::SetViewMode(int mode) {
       static_cast<int>(size.cy * 2.5);
   list_.SetTileViewInfo(0, LVTVIF_FIXEDSIZE, nullptr, &size);
 
-  view_as = mode;
+  Settings.Set(taiga::kApp_Seasons_ViewAs, mode);
 }
 
 }  // namespace ui

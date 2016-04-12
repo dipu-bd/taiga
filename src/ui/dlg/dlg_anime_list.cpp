@@ -799,7 +799,7 @@ LRESULT AnimeListDialog::OnListNotify(LPARAM lParam) {
 
     // Key press
     case LVN_KEYDOWN: {
-      LPNMLVKEYDOWN pnkd = reinterpret_cast<LPNMLVKEYDOWN>(lParam);
+      auto pnkd = reinterpret_cast<LPNMLVKEYDOWN>(lParam);
       int anime_id = GetCurrentId();
       auto anime_ids = GetCurrentIds();
       switch (pnkd->wVKey) {
@@ -829,10 +829,10 @@ LRESULT AnimeListDialog::OnListNotify(LPARAM lParam) {
             if (!anime::IsValidId(anime_id))
               break;
             // Edit episode
-            if (pnkd->wVKey == VK_ADD) {
+            if (pnkd->wVKey == VK_ADD || pnkd->wVKey == VK_OEM_PLUS) {
               anime::IncrementEpisode(anime_id);
               return TRUE;
-            } else if (pnkd->wVKey == VK_SUBTRACT) {
+            } else if (pnkd->wVKey == VK_SUBTRACT || pnkd->wVKey == VK_OEM_MINUS) {
               anime::DecrementEpisode(anime_id);
               return TRUE;
             // Edit score

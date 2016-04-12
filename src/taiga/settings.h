@@ -83,6 +83,7 @@ enum AppSettingName {
   kRecognition_DetectStreamingMedia,
   kRecognition_IgnoredStrings,
   kRecognition_LookupParentDirectories,
+  kRecognition_RelationsLastModified,
   kSync_Update_Delay,
   kSync_Update_AskToConfirm,
   kSync_Update_CheckPlayer,
@@ -153,6 +154,11 @@ enum AppSettingName {
   kApp_Option_EnableRecognition,
   kApp_Option_EnableSharing,
   kApp_Option_EnableSync,
+  kApp_Seasons_LastSeason,
+  kApp_Seasons_MaxSeason,
+  kApp_Seasons_GroupBy,
+  kApp_Seasons_SortBy,
+  kApp_Seasons_ViewAs,
 
   kAppSettingNameLast  // used for iteration
 };

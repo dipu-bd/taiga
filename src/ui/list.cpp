@@ -22,6 +22,7 @@
 #include "base/string.h"
 #include "base/time.h"
 #include "library/anime_db.h"
+#include "library/anime_season.h"
 #include "library/anime_util.h"
 #include "sync/service.h"
 #include "taiga/settings.h"
@@ -41,15 +42,29 @@ static int CompareValues(const T& first, const T& second) {
 ////////////////////////////////////////////////////////////////////////////////
 
 int SortAsEpisodeRange(const std::wstring& str1, const std::wstring& str2) {
-  auto get_last_episode = [](const std::wstring& str) {
+  auto is_volume = [](const std::wstring& str) {
+    return !str.empty() && !IsNumericChar(str.front());
+  };
+  auto get_last_number_in_range = [](const std::wstring& str) {
     auto pos = InStr(str, L"-");
     return pos > -1 ? ToInt(str.substr(pos + 1)) : ToInt(str);
   };
+  auto get_volume = [&](const std::wstring& str) {
+    auto pos = InStr(str, L" ");
+    return pos > -1 ? get_last_number_in_range(str.substr(pos + 1)) : 0;
+  };
 
-  int number1 = get_last_episode(str1);
-  int number2 = get_last_episode(str2);
+  bool is_volume1 = is_volume(str1);
+  bool is_volume2 = is_volume(str2);
 
-  return CompareValues<int>(number1, number2);
+  if (is_volume1 && is_volume2) {
+    return CompareValues<int>(get_volume(str1), get_volume(str2));
+  } else if (!is_volume1 && !is_volume2) {
+    return CompareValues<int>(get_last_number_in_range(str1),
+                              get_last_number_in_range(str2));
+  } else {
+    return is_volume1 ? base::kLessThan : base::kGreaterThan;
+  }
 }
 
 int SortAsFileSize(LPCWSTR str1, LPCWSTR str2) {
@@ -195,8 +210,8 @@ int SortListByTitle(const anime::Item& item1, const anime::Item& item2) {
 
 int SortListBySeason(const anime::Item& item1, const anime::Item& item2,
                      int order) {
-  auto season1 = anime::TranslateDateToSeason(item1.GetDateStart());
-  auto season2 = anime::TranslateDateToSeason(item2.GetDateStart());
+  anime::Season season1(item1.GetDateStart());
+  anime::Season season2(item2.GetDateStart());
 
   if (season1 != season2)
     return CompareValues<anime::Season>(season1, season2);
@@ -326,6 +341,22 @@ int CALLBACK AnimeListCompareProc(LPARAM lParam1, LPARAM lParam2,
 ////////////////////////////////////////////////////////////////////////////////
 
 int GetAnimeIdFromSelectedListItem(win::ListView& listview) {
+  int anime_id = static_cast<int>(GetParamFromSelectedListItem(listview));
+  return anime::IsValidId(anime_id) ? anime_id : anime::ID_UNKNOWN;
+}
+
+std::vector<int> GetAnimeIdsFromSelectedListItems(win::ListView& listview) {
+  std::vector<int> anime_ids;
+
+  auto params = GetParamsFromSelectedListItems(listview);
+  for (const auto& param : params) {
+    anime_ids.push_back(static_cast<int>(param));
+  }
+
+  return anime_ids;
+}
+
+LPARAM GetParamFromSelectedListItem(win::ListView& listview) {
   int index = listview.GetNextItem(-1, LVIS_SELECTED);
 
   if (index > -1) {
@@ -334,23 +365,21 @@ int GetAnimeIdFromSelectedListItem(win::ListView& listview) {
       if (focused_index > -1)
         index = focused_index;
     }
-    int anime_id = listview.GetItemParam(index);
-    if (anime::IsValidId(anime_id))
-      return anime_id;
+    return listview.GetItemParam(index);
   }
 
-  return anime::ID_UNKNOWN;
+  return 0;
 }
 
-std::vector<int> GetAnimeIdsFromSelectedListItems(win::ListView& listview) {
-  std::vector<int> anime_ids;
+std::vector<LPARAM> GetParamsFromSelectedListItems(win::ListView& listview) {
+  std::vector<LPARAM> params;
 
   int index = -1;
   while ((index = listview.GetNextItem(index, LVIS_SELECTED)) > -1) {
-    anime_ids.push_back(listview.GetItemParam(index));
+    params.push_back(listview.GetItemParam(index));
   };
 
-  return anime_ids;
+  return params;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

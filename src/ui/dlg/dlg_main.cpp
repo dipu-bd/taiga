@@ -716,6 +716,9 @@ void MainDialog::OnTaskbarCallback(UINT uMsg, LPARAM lParam) {
           case taiga::kTipTypeUpdateFailed:
             History.queue.Check(false);
             break;
+          case taiga::kTipTypeNotApproved:
+            navigation.SetCurrentPage(kSidebarItemHistory);
+            break;
         }
         ActivateWindow(GetWindowHandle());
         Taiga.current_tip_type = taiga::kTipTypeDefault;
@@ -950,8 +953,6 @@ void MainDialog::Navigation::Refresh(bool add_to_history) {
 
 void MainDialog::Navigation::RefreshSearchText(int previous_page) {
   std::wstring cue_text;
-  std::wstring search_text;
-
   switch (current_page_) {
     case kSidebarItemAnimeList:
     case kSidebarItemSeasons:
@@ -964,30 +965,27 @@ void MainDialog::Navigation::RefreshSearchText(int previous_page) {
     case kSidebarItemSearch:
       parent->search_bar.mode = kSearchModeService;
       cue_text = L"Search " + taiga::GetCurrentService()->name() + L" for anime";
-      if (current_page_ == kSidebarItemSearch)
-        search_text = DlgSearch.search_text;
       break;
     case kSidebarItemFeeds:
       parent->search_bar.mode = kSearchModeFeed;
       cue_text = L"Search for torrents";
       break;
   }
-
-  if (!parent->search_bar.filters.text.empty()) {
-    parent->search_bar.filters.text.clear();
-    switch (previous_page) {
-      case kSidebarItemAnimeList:
-        DlgAnimeList.RefreshList();
-        DlgAnimeList.RefreshTabs();
-        break;
-      case kSidebarItemSeasons:
-        DlgSeason.RefreshList();
-        break;
-    }
-  }
-
   parent->edit.SetCueBannerText(cue_text.c_str());
-  parent->edit.SetText(search_text);
+
+  switch (current_page_) {
+    case kSidebarItemAnimeList:
+    case kSidebarItemSeasons:
+    case kSidebarItemSearch:
+    case kSidebarItemFeeds:
+      parent->search_bar.filters.text = parent->search_bar.text[current_page_];
+      break;
+    default:
+      parent->search_bar.filters.text.clear();
+      parent->search_bar.text[current_page_].clear();
+      break;
+  }
+  parent->edit.SetText(parent->search_bar.text[current_page_]);
 }
 
 }  // namespace ui

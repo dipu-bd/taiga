@@ -24,6 +24,8 @@
 #include "base/string.h"
 #include "base/xml.h"
 #include "library/anime_db.h"
+#include "library/anime_season.h"
+#include "library/discover.h"
 #include "library/history.h"
 #include "library/resource.h"
 #include "sync/manager.h"
@@ -36,6 +38,7 @@
 #include "track/media.h"
 #include "track/monitor.h"
 #include "ui/dlg/dlg_anime_list.h"
+#include "ui/dlg/dlg_season.h"
 #include "ui/menu.h"
 #include "ui/theme.h"
 #include "ui/ui.h"
@@ -47,11 +50,15 @@ taiga::AppSettings Settings;
 namespace taiga {
 
 const std::wstring kDefaultExternalLinks =
-    L"Hummingboard|http://hb.cybrox.eu\r\n"
+    L"Hummingbird Tools|https://hb.wopian.me\r\n"
     L"MALgraph|http://graph.anime.plus\r\n"
     L"-\r\n"
-    L"Mahou Showtime Schedule|http://www.mahou.org/Showtime/?o=ET#Current\r\n"
-    L"The Fansub Wiki|http://www.fansubwiki.com";
+    L"AniChart|http://anichart.net/airing\r\n"
+    L"Monthly.moe|http://www.monthly.moe/weekly\r\n"
+    L"Senpai Anime Charts|http://www.senpai.moe/?mode=calendar\r\n"
+    L"-\r\n"
+    L"Anime Streaming Search Engine|http://because.moe\r\n"
+    L"The Fansub Database|http://fansubdb.com";
 const std::wstring kDefaultFormatHttp =
     L"user=%user%"
     L"&name=%title%"
@@ -143,6 +150,7 @@ void AppSettings::InitializeMap() {
   INITKEY(kRecognition_DetectStreamingMedia, nullptr, L"recognition/streaming/enabled");
   INITKEY(kRecognition_IgnoredStrings, nullptr, L"recognition/anitomy/ignored_strings");
   INITKEY(kRecognition_LookupParentDirectories, L"true", L"recognition/general/lookup_parent_directories");
+  INITKEY(kRecognition_RelationsLastModified, nullptr, L"recognition/general/relations_last_modified");
   INITKEY(kSync_Update_Delay, L"120", L"account/update/delay");
   INITKEY(kSync_Update_AskToConfirm, L"true", L"account/update/asktoconfirm");
   INITKEY(kSync_Update_CheckPlayer, nullptr, L"account/update/checkplayer");
@@ -213,6 +221,11 @@ void AppSettings::InitializeMap() {
   INITKEY(kApp_Option_EnableRecognition, L"true", L"program/general/enablerecognition");
   INITKEY(kApp_Option_EnableSharing, L"true", L"program/general/enablesharing");
   INITKEY(kApp_Option_EnableSync, L"true", L"program/general/enablesync");
+  INITKEY(kApp_Seasons_LastSeason, nullptr, L"program/seasons/lastseason");
+  INITKEY(kApp_Seasons_MaxSeason, nullptr, L"program/seasons/maxseason");
+  INITKEY(kApp_Seasons_GroupBy, ToWstr(ui::kSeasonGroupByType).c_str(), L"program/seasons/groupby");
+  INITKEY(kApp_Seasons_SortBy, ToWstr(ui::kSeasonSortByTitle).c_str(), L"program/seasons/sortby");
+  INITKEY(kApp_Seasons_ViewAs, ToWstr(ui::kSeasonViewAsTiles).c_str(), L"program/seasons/viewas");
 
   #undef INITKEY
 }
@@ -283,6 +296,11 @@ bool AppSettings::Load() {
       data.width = column.attribute(L"width").as_int();
     }
   }
+
+  // Seasons
+  anime::Season season_max(GetWstr(kApp_Seasons_MaxSeason));
+  if (season_max && season_max > SeasonDatabase.available_seasons.second)
+    SeasonDatabase.available_seasons.second = season_max;
 
   // Torrent application path
   if (GetWstr(kTorrent_Download_AppPath).empty()) {
@@ -402,6 +420,7 @@ void AppSettings::ApplyChanges(const std::wstring& previous_service,
         AnimeDatabase.items.clear();
         AnimeDatabase.SaveDatabase();
         ImageDatabase.Clear();
+        SeasonDatabase.Reset();
       } else {
         Set(kSync_ActiveService, previous_service);
         changed_service = false;
@@ -486,6 +505,30 @@ void AppSettings::HandleCompatibility() {
       }
     }
     Set(kRecognition_DetectStreamingMedia, detect_streaming_media);
+  }
+
+  if (GetInt(kMeta_Version_Major) <= 1 &&
+      GetInt(kMeta_Version_Minor) <= 2 &&
+      GetInt(kMeta_Version_Revision) <= 2) {
+    auto external_links = GetWstr(kApp_Interface_ExternalLinks);
+    ReplaceString(external_links, L"http://mal.oko.im", L"http://graph.anime.plus");
+    std::vector<std::wstring> link_vector;
+    Split(external_links, L"\r\n", link_vector);
+    for (auto it = link_vector.begin(); it != link_vector.end(); ++it) {
+      if (StartsWith(*it, L"Hummingboard")) {
+        *it = L"Hummingbird Tools|https://hb.wopian.me";
+      } else if (StartsWith(*it, L"Mahou Showtime Schedule")) {
+        *it = L"Senpai Anime Charts|http://www.senpai.moe/?mode=calendar";
+        it = link_vector.insert(it, L"Monthly.moe|http://www.monthly.moe/weekly");
+        it = link_vector.insert(it, L"AniChart|http://anichart.net/airing");
+      } else if (StartsWith(*it, L"The Fansub Wiki")) {
+        *it = L"The Fansub Database|http://fansubdb.com";
+        it = link_vector.insert(it, L"Anime Streaming Search Engine|http://because.moe");
+        it = link_vector.insert(it, L"-");
+      }
+    }
+    external_links = Join(link_vector, L"\r\n");
+    Set(kApp_Interface_ExternalLinks, external_links);
   }
 }
 

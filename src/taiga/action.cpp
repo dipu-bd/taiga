@@ -346,6 +346,23 @@ void ExecuteAction(std::wstring action, WPARAM wParam, LPARAM lParam) {
     int anime_id = body.empty() ? static_cast<int>(lParam) : ToInt(body);
     ui::ShowDlgAnimeEdit(anime_id);
 
+  // EditDateClear(value)
+  //   Clears date started (0), date completed (1), or both (2).
+  //   lParam is a pointer to a vector of anime IDs.
+  } else if (action == L"EditDateClear") {
+    const auto& anime_ids = *reinterpret_cast<std::vector<int>*>(lParam);
+    for (const auto& anime_id : anime_ids) {
+      HistoryItem history_item;
+      history_item.anime_id = anime_id;
+      int value = ToInt(body);
+      if (value == 0 || value == 2)
+        history_item.date_start = Date();
+      if (value == 1 || value == 2)
+        history_item.date_finish = Date();
+      history_item.mode = taiga::kHttpServiceUpdateLibraryEntry;
+      History.queue.Add(history_item);
+    }
+
   // EditDelete()
   //   Removes an anime from list.
   //   lParam is a pointer to a vector of anime IDs.
@@ -518,27 +535,24 @@ void ExecuteAction(std::wstring action, WPARAM wParam, LPARAM lParam) {
   // Season_Load(file)
   //   Loads season data.
   } else if (action == L"Season_Load") {
-    if (SeasonDatabase.Load(body)) {
+    if (SeasonDatabase.LoadSeason(body)) {
+      Settings.Set(taiga::kApp_Seasons_LastSeason,
+                   SeasonDatabase.current_season.GetString());
       SeasonDatabase.Review();
-      ui::DlgSeason.RefreshList();
-      ui::DlgSeason.RefreshStatus();
-      ui::DlgSeason.RefreshToolbar();
-      if (SeasonDatabase.IsRefreshRequired())
-        if (ui::OnSeasonRefreshRequired())
-          ui::DlgSeason.RefreshData();
+      ui::OnSeasonLoad(SeasonDatabase.IsRefreshRequired());
     }
 
   // Season_GroupBy(group)
   //   Groups season data.
   } else if (action == L"Season_GroupBy") {
-    ui::DlgSeason.group_by = ToInt(body);
+    Settings.Set(taiga::kApp_Seasons_GroupBy, ToInt(body));
     ui::DlgSeason.RefreshList();
     ui::DlgSeason.RefreshToolbar();
 
   // Season_SortBy(sort)
   //   Sorts season data.
   } else if (action == L"Season_SortBy") {
-    ui::DlgSeason.sort_by = ToInt(body);
+    Settings.Set(taiga::kApp_Seasons_SortBy, ToInt(body));
     ui::DlgSeason.RefreshList();
     ui::DlgSeason.RefreshToolbar();
 

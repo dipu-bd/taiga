@@ -612,6 +612,22 @@ int GetEpisodeLow(const Episode& episode) {
   return episode.episode_number_range().first;
 }
 
+static std::wstring GetElementRange(anitomy::ElementCategory category,
+                                    const Episode& episode) {
+  const auto element_count = episode.elements().count(category);
+
+  if (element_count > 1) {
+    const auto range = episode.GetElementAsRange(category);
+    if (range.second > range.first)
+      return ToWstr(range.first) + L"-" + ToWstr(range.second);
+  }
+
+  if (element_count > 0)
+    return ToWstr(episode.GetElementAsInt(category));
+
+  return std::wstring();
+}
+
 std::wstring GetEpisodeRange(const Episode& episode) {
   if (IsEpisodeRange(episode))
     return ToWstr(GetEpisodeLow(episode)) + L"-" +
@@ -623,7 +639,11 @@ std::wstring GetEpisodeRange(const Episode& episode) {
   return std::wstring();
 }
 
-std::wstring GetEpisodeRange(const episode_number_range_t& range) {
+std::wstring GetVolumeRange(const Episode& episode) {
+  return GetElementRange(anitomy::kElementVolumeNumber, episode);
+}
+
+std::wstring GetEpisodeRange(const number_range_t& range) {
   if (range.second > range.first)
     return ToWstr(range.first) + L"-" + ToWstr(range.second);
 
@@ -808,6 +828,17 @@ void GetAllTitles(int anime_id, std::vector<std::wstring>& titles) {
     insert_title(synonym);
   for (const auto& synonym : anime_item.GetUserSynonyms())
     insert_title(synonym);
+}
+
+// TODO: We may get rid of this function once MAL fixes their API
+int GetMyRewatchedTimes(const Item& item) {
+  const int rewatched_times = item.GetMyRewatchedTimes();
+
+  if (item.GetMyRewatching()) {
+    return max(rewatched_times, 1);  // because MAL doesn't tell us the actual value
+  } else {
+    return rewatched_times;
+  }
 }
 
 void GetProgressRatios(const Item& item, float& ratio_aired, float& ratio_watched) {

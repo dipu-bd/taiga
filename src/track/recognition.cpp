@@ -166,7 +166,7 @@ int Engine::Identify(anime::Episode& episode, bool give_score,
     if (episode.elements().empty(anitomy::kElementEpisodeNumber)) {
       if (!episode.file_extension().empty()) {
         episode.set_episode_number(1);
-      } else {
+      } else if (episode.elements().empty(anitomy::kElementVolumeNumber)) {
         auto anime_item = AnimeDatabase.FindItem(episode.anime_id);
         if (anime_item) {
           int episode_count = anime_item->GetEpisodeCount();
@@ -417,8 +417,15 @@ bool Engine::GetTitleFromPath(anime::Episode& episode) {
     anitomy_instance.options().parse_file_extension = false;
     anitomy_instance.options().parse_release_group = true;
     if (anitomy_instance.Parse(episode.anime_title())) {
-      auto elements = anitomy_instance.elements();
-      episode.set_anime_title(elements.get(anitomy::kElementAnimeTitle));
+      auto& elements = anitomy_instance.elements();
+      const auto valid_elements = {
+        anitomy::kElementAnimeTitle,
+        anitomy::kElementAnimeYear
+      };
+      for (const auto& element : valid_elements) {
+        if (!elements.empty(element))
+          episode.SetElementValue(element, elements.get(element));
+      }
     }
   }
 

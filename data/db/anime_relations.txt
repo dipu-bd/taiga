@@ -31,7 +31,7 @@
 - version: 1.2.0
 
 # Update this date when you add, remove or modify a rule.
-- last_modified: 2015-10-12
+- last_modified: 2016-04-05
 
 ::rules
 
@@ -40,6 +40,9 @@
 
 # Acchi Kocchi (TV) -> ~: Place=Princess
 - 12291|6701:13 -> 16273|7401:1
+
+# Akagami no Shirayuki-hime -> ~ 2nd Season
+- 30123|10621:13-24 -> 31173|11179:1-12!
 
 # Akuma no Riddle -> ~: Shousha wa Dare? Nukiuchi Test
 - 19429|7844:13 -> 24751|8724:1
@@ -50,6 +53,9 @@
 # Amagami SS -> ~: Imouto
 - 8676|5435:26 -> 9925|5943:1
 
+# Ano Natsu de Matteru -> ~: Bokutachi wa Koukou Saigo no Natsu wo Sugoshinagara, Ano Natsu de Matteiru.
+- 11433|6508:13 -> 23447|8407:1
+
 # Ansatsu Kyoushitsu (TV) -> ~: Deai no Jikan
 - 19759|7973:0 -> 28405|10020:1
 
@@ -59,6 +65,17 @@
 # Ao Haru Ride -> ~ OVA
 - 21995|8246:0 -> 24151|8488:1
 - 21995|8246:13 -> 24151|8488:2
+
+# Bishoujo Senshi Sailor Moon -> ~ R
+- 530|489:47-89 -> 740|664:1-43!
+# Bishoujo Senshi Sailor Moon -> ~ S
+- 530|489:90-127 -> 532|491:1-38!
+# Bishoujo Senshi Sailor Moon -> ~ SuperS
+- 530|489:128-166 -> 1239|1115:1-39!
+# Bishoujo Senshi Sailor Moon -> ~: Sailor Stars
+- 530|489:167-200 -> 996|886:1-34!
+# Bishoujo Senshi Sailor Moon Crystal -> ~ Season III
+- 14751|7163:27-? -> 31733|11415:1-?!
 
 # Black Lagoon -> ~: The Second Barrage
 - 889|789:13-24 -> 1519|1363:1-12!
@@ -86,6 +103,9 @@
 # Cardfight!! Vanguard -> ~: Legion Mate-hen
 - 9539|5781:164-196 -> 21729|8264:1-33!
 
+# Chihayafuru 2 -> ~: Waga Mi Yo ni Furu Nagame Seshi Ma ni
+- 14397|7123:26 -> 18745|7814:1
+
 # Chobits -> ~ Recap
 - 59|40:27 -> 1311|1176:1
 
@@ -96,6 +116,20 @@
 - 14741|7160:13 -> 16934|7556:1
 # Chuunibyou demo Koi ga Shitai! Ren -> ~: The Rikka Wars
 - 18671|7705:13 -> 27601|9132:1
+
+# Clannad -> ~: Mou Hitotsu no Sekai, Tomoyo-hen
+- 2167|1962:24 -> 4059|3438:1
+# Clannad: After Story -> ~ - Mou Hitotsu no Sekai, Kyou-hen
+- 4181|3505:25 -> 6351|4529:1
+
+# Code Geass: Boukoku no Akito 1 -> 2,3,4,5
+- 8888|5518:2 -> 15197|7227:1
+- 8888|5518:3 -> 15199|7228:1
+- 8888|5518:4 -> 15201|7229:1
+- 8888|5518:5 -> 30711|10904:1
+
+# Concrete Revolutio: Choujin Gensou -> ~ - The Last Song
+- 31147|11165:14-? -> 32313|11620:1-?!
 
 # Dakara Boku wa, H ga Dekinai. -> ~ OVA
 - 12549|7656:13 -> 14893|7180:1
@@ -110,6 +144,11 @@
 
 # Denpa Onna to Seishun Otoko -> ~ Special
 - 9379|5710:13 -> 10638|6276:1
+
+# Digimon Adventure tri. 1: Saikai -> ~ 2: Ketsui
+- 25687|8684:5-8 -> 32108|11546:1
+# Digimon Adventure tri. 1: Saikai -> ~ 3: Kokuhaku
+- 25687|8684:9-12 -> 32551|11547:1
 
 # Dokkiri Doctor -> ~ Special
 - 4554|3680:27 -> 13781|7027:1
@@ -127,7 +166,7 @@
 - 23199|8314:25-36 -> 27833|9725:1-12!
 
 # Fairy Tail -> ~ (2014)
-- 6702|4676:176-? -> 22043|8203:1-?!
+- 6702|4676:176-277 -> 22043|8203:1-102!
 
 # Fate/stay night: Unlimited Blade Works (TV) -> ~ Episode 0
 - 22297|7882:0 -> 27821|9718:1
@@ -137,18 +176,29 @@
 # Fate/Zero -> ~ 2nd Season
 - 10087|6028:14-25 -> 11741|7658:1-12!
 
-# Futsuu no Joshikousei ga [Locodol] Yatte Mita. -> ~: Nagarekawa, Annai Shite Mita.
+# Futsuu no Joshikousei ga [Locodol] Yattemita. -> ~: Nagarekawa, Annai Shitemita.
 - 22189|8267:13 -> 25719|8659:1
+# Futsuu no Joshikousei ga [Locodol] Yattemita. -> ~ OVA
+- 22189|8267:14-15 -> 30988|11077:1-2
+
+# Gakusen Toshi Asterisk -> ~ 2nd Season
+- 30544|10857:13-24 -> 31737|11421:1-12!
+
+# Gantz -> ~ 2nd Stage
+- 384|351:14-26 -> 395|362:1-13!
 
 # Gatchaman Crowds Insight -> ~: Inbound
 - 21039|8180:0 -> 30925|11033:1
+
+# Gate: Jieitai Kanochi nite, Kaku Tatakaeri -> ~ 2nd Season
+- 28907|10085:13-24 -> 31637|11376:1-12!
 
 # Gintama -> ~'
 - 918|818:202-252 -> 9969|5971:1-51!
 # Gintama -> ~': Enchousen
 - 918|818:253-265 -> 15417|7253:1-13!
-# Gintama -> ~' (2015)
-- 918|818:266-? -> 28977|10083:1-?!
+# Gintama -> ~°
+- 918|818:266-316 -> 28977|10083:1-51!
 
 # God Eater -> ~ Prologue
 - 27631|9130:0 -> 10470|6197:1
@@ -170,6 +220,13 @@
 
 # Hayate no Gotoku!! -> ~: Atsu ga Natsuize - Mizugihen!
 - 4192|3514:0 -> 5521|4133:1
+
+# High School DxD -> ~ OVA
+- 11617|6550:13-14 -> 12729|6801:1-2
+# High School DxD New -> ~: Oppai, Tsutsumimasu!
+- 15451|7258:13 -> 30300|10744:1
+# High School DxD BorN -> ~: Yomigaeranai Fushichou
+- 24703|8514:13 -> 32215|11598:1
 
 # Hipira-kun -> ~ ONA
 - 7723|5097:11-12 -> 22983|8585:1
@@ -199,6 +256,8 @@
 
 # Kaitou Joker -> ~ 2nd Season
 - 24909|8664:14-26 -> 28869|10070:1-13!
+# Kaitou Joker -> ~ 3rd Season
+- 24909|8664:27-? -> 31670|11393:1-?!
 
 # Kakumeiki Valvrave -> ~ 2nd Season
 - 16668|7487:13-24 -> 18295|7698:1-12!
@@ -230,7 +289,7 @@
 - 9656|5820:0 -> 10152|6055:1
 
 # Kindaichi Shounen no Jikenbo Returns -> ~ 2nd Season
-- 22817|8310:26-? -> 31227|11211:1-?!
+- 22817|8310:26-47 -> 31227|11211:1-22!
 
 # Kino no Tabi: The Beautiful World -> ~ - Tou no Kuni
 - 486|447:0 -> 3466|3031:1
@@ -256,6 +315,9 @@
 # Kyoukai no Kanata -> ~: Shinonome
 - 18153|7714:0 -> 23385|8379:1
 
+# Kyoukai no Rinne (TV) -> ~ 2nd Season
+- 28423|10018:26-50 -> 31610|11366:1-25!
+
 # Kyoukaisenjou no Horizon -> ~ II
 - 10456|6187:14-26 -> 12487|6746:1-13!
 
@@ -264,17 +326,32 @@
 # Kyousou Giga (TV) -> ~ Recaps
 - 19703|7870:0 -> 20723|8050:1
 
+# Log Horizon -> ~ 2
+- 17265|7622:26-50 -> 23321|8313:1-25!
+
 # Love Hina -> ~: Motoko's Choice, Love or the Sword - Don't Cry
 - 189|166:25 -> 963|853:1
 
 # Lovedol: Lovely Idol -> ~ OVA
 - 1561|1401:13 -> 6227|4484:1
 
+# Major S1 -> ~ S2,S3,S4,S5,S6
+- 627|582:27-52 -> 558|515:1-26!
+- 627|582:53-78 -> 1842|1659:1-26!
+- 627|582:79-104 -> 3226|2869:1-26!
+- 627|582:105-129 -> 5028|3891:1-25!
+- 627|582:130-154 -> 7655|5070:1-25!
+
 # Mangirl! -> ~: Asobu Henshuu Girl
 - 14045|7071:14 -> 17351|7886:1
 
 # MapleStory -> ~ Special
 - 2719|2480:26 -> 28237|9993:1
+
+# Maria-sama ga Miteru -> ~ Haru,3rd,4th
+- 158|7815:14-26 -> 444|7816:1-13
+- 158|7815:27-31 -> 1729|1550:1-5
+- 158|7815:32-44 -> 3750|3228:1-13
 
 # Marie & Gali -> ~ Episode Zero
 - 6130|4440:0 -> 6355|4530:1
@@ -334,12 +411,20 @@
 # Saenai Heroine no Sodatekata -> ~: Ai to Seishun no Service Kai
 - 23277|8406:0 -> 29317|10225:1
 
+# Saki Achiga-hen: Episode of Side-A -> ~: Specials
+- 10884|6392:13-16 -> 15989|7353:1-4
+
 # Sankarea -> ~ OVA
 - 11499|6521:0 -> 13055|6873:1
 # Sankarea -> ~: Wagahai mo... Zombie de Aru...
 - 11499|6521:13 -> 16694|7492:1
 # Sankarea -> ~ OVA
 - 11499|6521:14 -> 13055|6873:2
+
+# Seitokai Yakuindomo -> ~ OVA
+- 8675|5434:14-21 -> 10119|6046:1-8
+# Seitokai Yakuindomo * -> ~ OVA
+- 20847|8061:14-19 -> 26123|8708:1-6
 
 # Sekai Seifuku: Bouryaku no Zvezda -> ~ - Shin Zvezda Daisakusen
 - 20973|8082:13 -> 23459|8381:1
@@ -352,6 +437,9 @@
 
 # Senyuu. -> ~ 2
 - 15751|7303:14-26 -> 18523|7719:1-13!
+
+# Seto no Hanayome -> ~ OVA
+- 2104|1903:27-28 -> 4163|3498:1-2
 
 # Shugo Chara! -> ~! Doki
 - 2923|2648:52-102 -> 5262|4019:1-51!
@@ -384,10 +472,15 @@
 # Teekyuu -> ~ 5
 - 15125|7217:49-60 -> 30567|10858:1-12!
 # Teekyuu -> ~ 6
-- 15125|7217:61-? -> 31440|11334:1-?!
+- 15125|7217:61-72 -> 31440|11334:1-12!
+# Teekyuu -> ~ 7
+- 15125|7217:73-84 -> 32228|11597:1-12!
 
 # Tegami Bachi -> ~ Reverse
 - 6444|4564:26-50 -> 8311|5288:1-25!
+
+# Tenjou Tenge -> ~: The Ultimate Fight
+- 174|151:25-26 -> 448|411:1-2
 
 # The iDOLM@STER -> ~: 765 Pro to Iu Monogatari
 - 10278|6111:765 -> 11889|6627:1
@@ -404,8 +497,14 @@
 # Trinity Seven -> ~ OVA
 - 25157|8607:13 -> 28285|10014:1
 
+# Tsubasa Chronicle -> ~ 2nd Season
+- 177|154:27-52 -> 969|859:1-26
+
 # UN-GO -> ~: Inga-ron
 - 10798|6353:0 -> 11531|6529:1
+
+# Ushio to Tora (TV) -> ~ 2nd Season
+- 29854|10359:27-39 -> 31098|11126:1-13!
 
 # Watashi ga Motenai no wa Dou Kangaetemo Omaera ga Warui! -> ~ OVA
 - 16742|7504:13 -> 20449|7991:1
@@ -421,6 +520,9 @@
 
 # Wooser no Sono Higurashi -> ~: Ken to Pantsu to Wooser to
 - 15313|7238:13 -> 16738|7502:1
+
+# Working!!! -> ~ Lord of the Takanashi
+- 25879|8712:14 -> 31715|11420:1
 
 # Yama no Susume -> ~: Kabette Kowakunai no?
 - 14355|7117:13 -> 17341|7766:1

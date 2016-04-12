@@ -24,6 +24,25 @@
 
 namespace ui {
 
+enum SeasonGroupBy {
+  kSeasonGroupByAiringStatus,
+  kSeasonGroupByListStatus,
+  kSeasonGroupByType
+};
+
+enum SeasonSortBy {
+  kSeasonSortByAiringDate,
+  kSeasonSortByEpisodes,
+  kSeasonSortByPopularity,
+  kSeasonSortByScore,
+  kSeasonSortByTitle
+};
+
+enum SeasonViewAs {
+  kSeasonViewAsImages,
+  kSeasonViewAsTiles
+};
+
 class SeasonDialog : public win::Dialog {
 public:
   SeasonDialog();
@@ -40,21 +59,21 @@ public:
   void OnSize(UINT uMsg, UINT nType, SIZE size);
   LRESULT OnToolbarNotify(LPARAM lParam);
 
+  void EnableInput(bool enable = true);
   void RefreshData(int anime_id = 0);
   void RefreshList(bool redraw_only = false);
   void RefreshStatus();
   void RefreshToolbar();
   void SetViewMode(int mode);
 
-  int group_by;
-  int sort_by;
-  int view_as;
-
 private:
   win::Window cancel_button_;
   win::ListView list_;
   win::Rebar rebar_;
   win::Toolbar toolbar_;
+  win::Tooltip tooltips_;
+
+  int hot_item_;
 };
 
 extern SeasonDialog DlgSeason;

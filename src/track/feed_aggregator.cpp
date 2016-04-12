@@ -279,8 +279,6 @@ void Aggregator::HandleFeedDownloadOpen(FeedItem& feed_item,
     return;
 
   std::wstring app_path;
-  std::wstring parameters;
-
   switch (Settings.GetInt(taiga::kTorrent_Download_AppMode)) {
     case 1:  // Default application
       app_path = GetDefaultAppPath(L".torrent", L"");
@@ -290,9 +288,8 @@ void Aggregator::HandleFeedDownloadOpen(FeedItem& feed_item,
       break;
   }
 
-  if (Settings.GetBool(taiga::kTorrent_Download_UseAnimeFolder) &&
-      InStr(app_path, L"utorrent", 0, true) > -1) {
-    std::wstring download_path;
+  std::wstring download_path;
+  if (Settings.GetBool(taiga::kTorrent_Download_UseAnimeFolder)) {
     // Use anime folder as the download folder
     auto anime_id = feed_item.episode_data.anime_id;
     auto anime_item = AnimeDatabase.FindItem(anime_id);
@@ -327,7 +324,7 @@ void Aggregator::HandleFeedDownloadOpen(FeedItem& feed_item,
         download_path += anime_title;
         if (!CreateFolder(download_path)) {
           LOG(LevelError, L"Subfolder could not be created.\n"
-              L"Path: " + download_path);
+                          L"Path: " + download_path);
           download_path.clear();
         } else {
           if (anime_item) {
@@ -337,14 +334,27 @@ void Aggregator::HandleFeedDownloadOpen(FeedItem& feed_item,
         }
       }
     }
-
-    // Set the command line parameter
-    if (!download_path.empty())
-      parameters = L"/directory \"" + download_path + L"\" ";
   }
 
-  parameters += L"\"" + file + L"\"";
-  Execute(app_path, parameters);
+  std::wstring parameters = L"\"" + file + L"\"";
+  int show_command = SW_SHOWNORMAL;
+
+  if (!download_path.empty()) {
+    // uTorrent
+    if (InStr(GetFileName(app_path), L"utorrent", 0, true) > -1) {
+      parameters = L"/directory \"" + download_path + L"\" " + parameters;
+    // Deluge
+    } else if (InStr(GetFileName(app_path), L"deluge", 0, true) > -1) {
+      app_path = GetPathOnly(app_path) + L"deluge-console.exe";
+      parameters = L"add -p \\\"" + download_path + L"\\\" \\\"" + file + L"\\\"";
+      show_command = SW_HIDE;
+    } else {
+      LOG(LevelDebug, L"Application is not a supported torrent client.\n"
+                      L"Path: " + app_path);
+    }
+  }
+
+  Execute(app_path, parameters, show_command);
 }
 
 bool Aggregator::ValidateFeedDownload(const HttpRequest& http_request,
@@ -400,12 +410,20 @@ void Aggregator::ParseDescription(FeedItem& feed_item,
     feed_item.description =
         feed_item.description.substr(index_begin, index_end);
 
+  // Haruhichan
+  } else if (InStr(source, L"haruhichan", 0, true) > -1) {
+    feed_item.info_link = feed_item.description;
+
   // NyaaTorrents
   } else if (InStr(source, L"nyaa", 0, true) > -1) {
-    feed_item.episode_data.file_size =
-        InStr(feed_item.description, L" - ", L" - ");
-    Erase(feed_item.description, feed_item.episode_data.file_size);
-    ReplaceString(feed_item.description, L"-  -", L"-");
+    std::vector<std::wstring> description_vector;
+    Split(feed_item.description, L" - ", description_vector);
+    if (description_vector.size() > 1) {
+      feed_item.episode_data.file_size = description_vector.at(1);
+      description_vector.erase(description_vector.begin() + 1);
+      feed_item.description = Join(description_vector, L" - ");
+    }
+    feed_item.info_link = feed_item.guid;
 
   // TokyoTosho
   } else if (InStr(source, L"tokyotosho", 0, true) > -1) {
@@ -425,10 +443,7 @@ void Aggregator::ParseDescription(FeedItem& feed_item,
             InStr(it, L"<a href=\"magnet:?", L"\">Magnet Link</a>");
       }
     }
-
-  // Yahoo! Pipes
-  } else if (InStr(source, L"pipes.yahoo.com", 0, true) > -1) {
-    Erase(feed_item.title, L"<span class=\"s\"> </span>");
+    feed_item.info_link = feed_item.guid;
   }
 }
 
